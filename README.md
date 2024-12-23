@@ -4,6 +4,6 @@ Collection of miscellaneous projects.
 
 # Table of Links
 
-| Name                     | Value                                     |
+| Name                     | Links                                     |
 |--------------------------|-------------------------------------------|
 |  Quiz App      | [hodgepodge-quizapp.vercel.app](https://hodgepodge-quizapp.vercel.app/) |
