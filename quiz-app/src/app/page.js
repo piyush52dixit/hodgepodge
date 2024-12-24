@@ -1,16 +1,16 @@
 "use client";
-
-import Image from "next/image";
 import styles from "./page.module.css";
-import { Button } from "antd";
 import QuestionsCard from "./components/questionsCard";
 import { useEffect, useState } from "react";
+import WelcomeModal from "./components/WelcomeModal";
+import { Spin } from "antd";
 
 export default function Home() {
   const [state, setState] = useState({
     loading: false,
-    response: [],
+    questions: [],
     error: "",
+    currentQuestionIndex: 0,
   });
 
   const updateState = (updatedValues) => {
@@ -22,39 +22,67 @@ export default function Home() {
       try {
         updateState({ loading: true });
         const response = await fetch("https://opentdb.com/api.php?amount=10");
-        updateState({ loading: false });
-
         const data = await response.json();
-        updateState({ response: data?.results });
+        updateState({ loading: false, questions: data?.results || [] });
+
+        localStorage.setItem("ques", JSON.stringify(data?.results));
       } catch (error) {
         console.error("Error fetching data:", error);
-        updateState({ error });
+        localStorage.removeItem("ques");
+        updateState({ error: "Failed to fetch questions." });
       }
     };
 
-    fetchData();
+    const dataExists = localStorage.getItem("ques");
+
+    if (dataExists) {
+      updateState({ questions: JSON.parse(dataExists) });
+    } else {
+      fetchData();
+    }
+
+    const currentQuestionIndex = localStorage.getItem("currentQuestionIndex");
+    if (currentQuestionIndex) {
+      updateState({ currentQuestionIndex: Number(currentQuestionIndex) });
+    }
   }, []);
 
+  const handleNextQuestion = () => {
+    if (state.currentQuestionIndex < state.questions.length - 1) {
+      updateState({ currentQuestionIndex: state.currentQuestionIndex + 1 });
+    }
+  };
+
+  const isModalShown = localStorage.getItem("isModalShown");
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <h1>Quiz App</h1>
+        {!isModalShown && <WelcomeModal />}
+        <div className={styles.mainWrapper}>
+          <h1>Quiz App</h1>
+          <span>
+            {state.currentQuestionIndex + 1}/{state.questions?.length}
+          </span>
+        </div>
+
         {state.error ? <p>Oops, Something Went Wrong!</p> : null}
-        <QuestionsCard data={state?.response} />
-        <Button style={{ width: "50%", margin: "auto" }}>Let's go</Button>
+
+        {state.loading ? (
+          <Spin />
+        ) : (
+          <>
+            {state.questions.length > 0 &&
+              state.questions[state.currentQuestionIndex] && (
+                <QuestionsCard
+                  data={state.questions[state.currentQuestionIndex]}
+                  handleNextQuestion={handleNextQuestion}
+                  currentQuestionIndex={state.currentQuestionIndex}
+                  questions={state.questions}
+                />
+              )}
+          </>
+        )}
       </main>
-      <footer className={styles.footer}>
-        <a href="https://github.com/piyush52dixit/" rel="noopener noreferrer">
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Github
-        </a>
-      </footer>
     </div>
   );
 }
