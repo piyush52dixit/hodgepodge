@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Card, Radio, Alert, Button, Modal } from "antd";
 import { SmileOutlined } from "@ant-design/icons";
